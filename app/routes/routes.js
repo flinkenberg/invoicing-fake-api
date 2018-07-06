@@ -17,9 +17,23 @@ const router = (app, config) => {
     app.get("/", (_req, res) => (
         tryDelay(() => res.status(200).send("/"))
     ));
-    app.get("/contacts", (_req, res) => {
-        res.status(200);
-        tryDelay(() => res.send(data));
+    app.get("/contacts", (req, res) => {
+        if (req.query.page) {
+            const pageLimit = config && config.pageLimit ? config.pageLimit : 10;
+            const results = data.slice((pageLimit * req.query.page) - pageLimit, pageLimit * req.query.page);
+            if (results.length) {
+                tryDelay(() => res.status(200).send({
+                    count: data.length,
+                    results,
+                }));
+            } else {
+                tryDelay(() => res.status(404).send({
+                    message: "Page does not exist."
+                }));
+            }
+        } else {
+            tryDelay(() => res.status(200).send(data));
+        }
     });
     app.get("/contacts/:id", (req, res) => {
         const id = req.params.id;
